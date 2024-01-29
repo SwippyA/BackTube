@@ -6,26 +6,27 @@ import { ApiResponse } from "../utility/ApiRespone.js";
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, fullName, password } = req.body;
   console.log(email);
-  console.log(password)[(username, email, fullName, password)].map((field) => {
+  console.log(password);
+  [(username, email, fullName, password)].map((field) => {
     if (field === "" && field == null) {
       throw new ApiError(400, `${field} is must required !!`);
     }
   });
-  const Existed = User.findOne({
+  const Existed = await User.findOne({
     $or: [{ username }, { email }],
   });
   if (Existed) {
     throw new ApiError(409, "This Email and user is already Exist !!");
   }
 
-  const Avatralocalpath = req.files?.avatra[0]?.path;
-  const coverimagelocalpath = req.files?.coverimage[0]?.path;
-  if (!Avatralocalpath) {
+  const avatarlocalpath = req.files?.avatar[0]?.path;
+  const coverImagelocalpath = req.files?.coverImage[0]?.path;
+  if (!avatarlocalpath) {
     throw new ApiError(400, "Avatra Must reqired!!");
   }
-  const avatra = await UploadFile(Avatralocalpath);
-  const coverimage = await UploadFile(coverimagelocalpath);
-  if (!avatra) {
+  const avatar = await UploadFile(avatarlocalpath);
+  const coverimage = await UploadFile(coverImagelocalpath);
+  if (!avatar) {
     throw new ApiError(400, "Avatra Must reqired!!");
   }
 
@@ -33,8 +34,8 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
     email,
     fullName,
-    avatar: avatra.url,
-    coverImage: coverimage.url,
+    avatar: avatar.url,
+    coverImage: coverimage.url  || "",
     password,
   });
 

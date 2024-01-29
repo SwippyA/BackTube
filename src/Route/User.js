@@ -1,20 +1,22 @@
-import {Router} from "express"
-import { registerUser } from "../Controller/User.js"
-import upload from "../Middleway/Multer.js"
-const Route =Router();
+import { Router } from "express";
+import { registerUser } from "../Controller/User.js";
+import { upload } from '../Middleway/Multer.js'
 
-Route.route("/register").post(
-    upload.field([
+const router = Router()
+
+router.route("/register").post(
+    upload.fields([
         {
-            name:avatra,
-            maxCount:1
-        },
+            name: "avatar",
+            maxCount: 1
+        }, 
         {
-            name:coverimage,
-            maxCount:1
+            name: "coverImage",
+            maxCount: 1
         }
     ]),
     registerUser
     )
 
-export default Route;
+
+export default router;
