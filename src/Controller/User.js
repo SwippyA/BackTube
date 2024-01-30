@@ -18,14 +18,24 @@ const registerUser = asyncHandler(async (req, res) => {
   if (Existed) {
     throw new ApiError(409, "This Email and user is already Exist !!");
   }
+ 
+  console.log(req.files);
+  const avatarLocalPath = await req.files && req.files.avatar && req.files.avatar[0] ? req.files.avatar[0].path : null;
+  let coverImageLocalPath;
+ 
 
-  const avatarlocalpath = req.files?.avatar[0]?.path;
-  const coverImagelocalpath = req.files?.coverImage[0]?.path;
-  if (!avatarlocalpath) {
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
+  if (!avatarLocalPath) {
     throw new ApiError(400, "Avatra Must reqired!!");
   }
-  const avatar = await UploadFile(avatarlocalpath);
-  const coverimage = await UploadFile(coverImagelocalpath);
+  const avatar = await UploadFile(avatarLocalPath);
+  const coverimage = await UploadFile(coverImageLocalPath);
   if (!avatar) {
     throw new ApiError(400, "Avatra Must reqired!!");
   }
@@ -35,7 +45,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     fullName,
     avatar: avatar.url,
-    coverImage: coverimage.url  || "",
+    coverImage: coverimage.url || "",
     password,
   });
 
