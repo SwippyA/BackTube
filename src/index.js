@@ -7,9 +7,9 @@ dotenv.config({
 
 Connection_db()
   .then(() => {
-    app.listen(process.env.Port || 8000, () => {
-      console.log(`the server is serve at Port ${process.env.Port}`);
-      console.log(`http://localhost:${process.env.Port}`);
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`the server is serve at Port ${process.env.PORT}`);
+      console.log(`http://localhost:${process.env.PORT}`);
     });
   })
   .catch((error) => {
