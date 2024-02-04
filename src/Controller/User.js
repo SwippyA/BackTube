@@ -83,5 +83,88 @@ const registerUser = asyncHandler( async (req, res) => {
   )
 
 } )
+ 
+const LoginUser = asyncHandler(async (req , res )=>{
 
-export {registerUser};
+    const {username ,email , password} =req.body;
+    if (
+        [email, username, password].some((field) => field?.trim() === "")
+    ) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const login_user = await User.findOne({
+        $or: [{ username }, { email }]
+    })
+
+    if(!login_user) {
+        throw new ApiError(401,"You dont have Accout init!")
+    }
+    
+     const is_valid = await login_user.isPasswordCorrect(password)
+     if(!is_valid){
+        throw new ApiError(401,"Worng Password !")
+     }
+
+     const {accessToken,refreshToken}=  generate_refresh_and_access_token(login_user._id);
+
+     const Loggedin_user = User.findById(login_user._id).select("-password -refreshToken")
+
+     const option ={
+        httpOnly:true,
+        secure:true
+     }
+     return res
+     .status(200)
+     .Cookie("accessToken",accessToken,option)
+     .Cookie("refreshToken",refreshToken,option)
+     .json(new ApiResponse(201,{
+        user:Loggedin_user,accessToken,refreshToken
+     },"Sucessfully Login in the APP!"))
+
+    
+})
+
+const Logout = asyncHandler(async(req,res)=>{
+       const user_id =req.user._id;
+       const user = await User.findById(user_id);
+       user.refreshToken =null;
+       user.save({ValidateBeforeSave:false});
+
+       const option ={
+        httpOnly:true,
+        secure:true
+     }
+
+     return res.status(200).clearCookie("accessToken",accessToken,option).clearCookie("refreshToken",refreshToken,option).json(200,{},"Logged out !")
+
+
+
+
+})
+
+
+const generate_refresh_and_access_token = (user_id)=>{
+    try {
+        const user = User.findById(user_id)
+        const accessToken =user.generateAccessToken();
+        const refreshToken =user.generateRefreshToken();
+
+        user.refreshToken= refreshToken;
+        user.save({ValidateBeforeSave:false});
+        return {accessToken ,refreshToken}
+
+
+    } catch (error) {
+        throw new ApiError(500 ,"Token not Generate !!")
+    }
+}
+export {
+    
+    registerUser,
+    LoginUser,
+    Logout
+
+
+
+};
