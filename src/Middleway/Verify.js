@@ -1,28 +1,33 @@
 import { User } from "../Models/User.js";
 import { ApiError } from "../utility/Apierroe.js";
 import { asyncHandler } from "../utility/AsyHandler.js";
-import {jwt} from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
-export const verify = asyncHandler(async (req ,res,next)=>{
+export const verifyJWT = asyncHandler(async (req, _, next) => {
+  try {
+    console.log(req.cookie);
+    // console.log();
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
 
-    try {
-        const token = req.Cookie?.accessToken ||req.header("Authorization")?.replace("Bearer ","")
-    
-        if(!token){
-            throw new ApiError(404,"Something Went wrong!")
-        }
-    
-    
-    const  check =jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
-    
-    const user = await User.findById(check._id).select("-password -refreshToken")
-    if(!user){
-        throw new ApiError(404,"Something Went wrong!")
+    if (!token) {
+      throw new ApiError(401, "Unauthorized request");
     }
-    
-    req.user = user ;
-    next()
-    } catch (error) {
-        throw new ApiError(500,"Something went wrong !!")
+
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const user = await User.findById(decodedToken?._id).select(
+      "-password -refreshToken"
+    );
+
+    if (!user) {
+      throw new ApiError(401, "Invalid Access Token");
     }
-})
+
+    req.user = user;
+    next();
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid access token");
+  }
+});

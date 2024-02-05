@@ -4,7 +4,34 @@ import { User } from "../Models/User.js";
 import { uploadOnCloudinary } from "../utility/Fileupload.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
 
+const generate_refresh_and_access_token = async (user_id) => {
+    try {
+        const user = await User.findById(user_id)
+        
+        const accessToken =user.generateAccessToken();
+        const refreshToken =user.generateRefreshToken();
+        // console.log(accessToken);
+        // console.log(refreshToken);
 
+
+         user.refreshToken =  refreshToken;
+        //  console.log(user.refreshToken);
+         user.save({ validateBeforeSave:false });
+         console.log(accessToken);
+        //  console.log(refreshToken);
+        const obj = {
+            accessToken: accessToken,
+            refreshToken: refreshToken
+        };
+        
+        // return {accessToken ,refreshToken};
+        return obj;
+
+
+    } catch (error) {
+        throw new ApiError(500 ,"Token not Generate !!")
+    }
+}
 
 
 
@@ -84,7 +111,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
 } )
  
-const LoginUser = asyncHandler(async (req , res )=>{
+const LoginUser = asyncHandler( async (req , res )=>{
 
     const {username ,email , password} =req.body;
     if (
@@ -96,6 +123,7 @@ const LoginUser = asyncHandler(async (req , res )=>{
     const login_user = await User.findOne({
         $or: [{ username }, { email }]
     })
+    // console.log(login_user)
 
     if(!login_user) {
         throw new ApiError(401,"You dont have Accout init!")
@@ -105,60 +133,74 @@ const LoginUser = asyncHandler(async (req , res )=>{
      if(!is_valid){
         throw new ApiError(401,"Worng Password !")
      }
-
-     const {accessToken,refreshToken}=  generate_refresh_and_access_token(login_user._id);
-
-     const Loggedin_user = User.findById(login_user._id).select("-password -refreshToken")
+     console.log(login_user._id);
+    //  const { accessToken , refreshToken } = generate_refresh_and_access_token(login_user._id);
+     const obj = await generate_refresh_and_access_token(login_user._id);
+     const refreshToken = obj.refreshToken
+    const accessToken = obj.accessToken
+     //  const hi = generate_refresh_and_access_token(login_user._id);
+    //  console.log(hi);
+    //  console.log(generate_refresh_and_access_token(login_user._id))
+    //  console.log(accessToken);
+    //  console.log(refreshToken);
+    // console.log(generate_refresh_and_access_token(login_user._id))
+     const Loggedin_user = await User.findById(login_user._id).select("-password -refreshToken")
 
      const option ={
         httpOnly:true,
         secure:true
      }
+    //  console.log(accessToken);
+    //  console.log(refreshToken);
      return res
      .status(200)
-     .Cookie("accessToken",accessToken,option)
-     .Cookie("refreshToken",refreshToken,option)
-     .json(new ApiResponse(201,{
-        user:Loggedin_user,accessToken,refreshToken
-     },"Sucessfully Login in the APP!"))
+     .cookie("accessToken",accessToken,option)
+     .cookie("refreshToken",refreshToken,option)
+     .json(
+        new ApiResponse(
+            200, 
+            {
+                user: Loggedin_user, accessToken, refreshToken
+            },
+            "User logged In Successfully"
+        )
+    );
 
     
 })
 
 const Logout = asyncHandler(async(req,res)=>{
-       const user_id =req.user._id;
-       const user = await User.findById(user_id);
-       user.refreshToken =null;
-       user.save({ValidateBeforeSave:false});
+    
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        },
+        {
+            new: true
+        }
+    )
 
-       const option ={
-        httpOnly:true,
-        secure:true
-     }
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
 
-     return res.status(200).clearCookie("accessToken",accessToken,option).clearCookie("refreshToken",refreshToken,option).json(200,{},"Logged out !")
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged Out"))
 
 
 
 
 })
 
+// console.log(generate_refresh_and_access_token)
 
-const generate_refresh_and_access_token = (user_id)=>{
-    try {
-        const user = User.findById(user_id)
-        const accessToken =user.generateAccessToken();
-        const refreshToken =user.generateRefreshToken();
-
-        user.refreshToken= refreshToken;
-        user.save({ValidateBeforeSave:false});
-        return {accessToken ,refreshToken}
-
-
-    } catch (error) {
-        throw new ApiError(500 ,"Token not Generate !!")
-    }
-}
 export {
     
     registerUser,
