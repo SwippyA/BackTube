@@ -3,7 +3,7 @@ import { ApiError } from "../utility/Apierroe.js";
 import { User } from "../Models/User.js";
 import { uploadOnCloudinary } from "../utility/Fileupload.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
-import { application } from "express";
+
 import Jwt   from "jsonwebtoken";
 
 const generate_refresh_and_access_token = async (user_id) => {
