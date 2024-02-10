@@ -16,7 +16,7 @@ const generate_refresh_and_access_token = async (user_id) => {
     user.refreshToken = refreshToken;
 
     user.save({ validateBeforeSave: false });
-    console.log(accessToken);
+    // console.log(accessToken);
 
     const obj = {
       accessToken: accessToken,
@@ -124,7 +124,7 @@ const LoginUser = asyncHandler(async (req, res) => {
   if (!is_valid) {
     throw new ApiError(401, "Worng Password !");
   }
-  console.log(login_user._id);
+  // console.log(login_user._id);
   //  const { accessToken , refreshToken } = generate_refresh_and_access_token(login_user._id);
   const obj = await generate_refresh_and_access_token(login_user._id);
   const refreshToken = obj.refreshToken;
