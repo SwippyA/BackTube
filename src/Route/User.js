@@ -34,16 +34,16 @@ router.route("/login").post(LoginUser);
 router.route("/logout").post(verifyJWT, Logout);
 router.route("/refreshtoken").post( RefreshToken );
 
-router.route("/change/password").post(verifyJWT, changePassword);
+router.route("/change-password").post(verifyJWT, changePassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update-account").patch(verifyJWT, updateAccountDetails);
 
 router
   .route("/avatar")
-  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+  .post(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
   .route("/cover-image")
-  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+  .post(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
 router.route("/c/:username").get(verifyJWT, userProfile);
 router.route("/history").get(verifyJWT, getWatchHistory);

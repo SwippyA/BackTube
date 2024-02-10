@@ -3,7 +3,7 @@ import { ApiError } from "../utility/Apierroe.js";
 import { User } from "../Models/User.js";
 import { uploadOnCloudinary } from "../utility/Fileupload.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
-
+import {mongoose} from "mongoose"
 import Jwt from "jsonwebtoken";
 
 const generate_refresh_and_access_token = async (user_id) => {
@@ -90,7 +90,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     username: username.toLowerCase(),
   });
-  console.log(user);
+  // console.log(user);
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -225,17 +225,28 @@ const RefreshToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error.message);
   }
 });
-const changePassword = asyncHandler(async (res, req) => {
-  const { oldpassword, newpassword } = req.body;
-  const user = await User.findById(req.user._id);
-  const true_false = user.isPasswordCorrect(user._id);
-  if (!true_false) {
-    throw new ApiError(401, "password doesnot match ");
-  }
-  user.password = newpassword;
-  await user.save({ validateBeforeSave: false });
 
-  return res.status(201).json(new ApiResponse(201, {}, "Password is changed"));
+
+
+const changePassword = asyncHandler(async(req,res) => {
+  console.log(req.body);
+  const  { oldPassword , newPassword} = req.body;
+
+    
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password")
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false})
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"))
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -326,12 +337,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
+
+
 const userProfile = asyncHandler(async (req, res) => {
+
   const { username } = req.params;
   if (!username?.trim) {
     throw new ApiError(401, "the username is not correct !");
   }
-  const channel = User.aggregate([
+  const channel = await User.aggregate([
     {
       $match: {
         username: username.toLowerCase(),
@@ -383,62 +397,70 @@ const userProfile = asyncHandler(async (req, res) => {
       },
     },
   ]);
+  if (!channel?.length) {
+    throw new ApiError(404, "channel does not exists")
+}
+
+return res
+.status(200)
+.json(
+    new ApiResponse(200, channel[0], "User channel fetched successfully")
+)
 });
 
-
-const getWatchHistory = asyncHandler(async(req, res) => {
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        {
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
             $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        fullName: 1,
-                                        username: 1,
-                                        avatar: 1
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields:{
-                            owner:{
-                                $first: "$owner"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    ])
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-    return res
+  return res
     .status(200)
     .json(
-        new ApiResponse(
-            200,
-            user[0].watchHistory,
-            "Watch history fetched successfully"
-        )
-    )
-})
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched successfully"
+      )
+    );
+});
 // console.log(generate_refresh_and_access_token)
 
 export {
@@ -452,5 +474,5 @@ export {
   updateAccountDetails,
   getCurrentUser,
   userProfile,
-  getWatchHistory
+  getWatchHistory,
 };
