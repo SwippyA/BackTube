@@ -3,7 +3,7 @@ import { ApiError } from "../utility/Apierroe.js";
 import { User } from "../Models/User.js";
 import { uploadOnCloudinary } from "../utility/Fileupload.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
-import {mongoose} from "mongoose"
+import { mongoose } from "mongoose";
 import Jwt from "jsonwebtoken";
 
 const generate_refresh_and_access_token = async (user_id) => {
@@ -226,27 +226,23 @@ const RefreshToken = asyncHandler(async (req, res) => {
   }
 });
 
-
-
-const changePassword = asyncHandler(async(req,res) => {
+const changePassword = asyncHandler(async (req, res) => {
   console.log(req.body);
-  const  { oldPassword , newPassword} = req.body;
+  const { oldPassword, newPassword } = req.body;
 
-    
+  const user = await User.findById(req.user?._id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-    const user = await User.findById(req.user?._id)
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password");
+  }
 
-    if (!isPasswordCorrect) {
-        throw new ApiError(400, "Invalid old password")
-    }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
 
-    user.password = newPassword
-    await user.save({validateBeforeSave: false})
-
-    return res
+  return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"))
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -338,9 +334,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
-
 const userProfile = asyncHandler(async (req, res) => {
-
   const { username } = req.params;
   if (!username?.trim) {
     throw new ApiError(401, "the username is not correct !");
@@ -398,14 +392,14 @@ const userProfile = asyncHandler(async (req, res) => {
     },
   ]);
   if (!channel?.length) {
-    throw new ApiError(404, "channel does not exists")
-}
+    throw new ApiError(404, "channel does not exists");
+  }
 
-return res
-.status(200)
-.json(
-    new ApiResponse(200, channel[0], "User channel fetched successfully")
-)
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
 });
 
 const getWatchHistory = asyncHandler(async (req, res) => {
