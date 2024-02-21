@@ -19,8 +19,10 @@ app.use(cookieParser())
 
 import router from "./Route/User.js";
 import videoRouter from "./Route/Video.js"
+import Platlist from "./Route/Playlist.js"
 
 app.use("/api/V1/users", router )
 app.use("/api/v1/videos", videoRouter)
+app.use("/api/v1/playlist", Platlist)
 
 export {app} ;
