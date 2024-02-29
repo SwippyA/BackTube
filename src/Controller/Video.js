@@ -68,9 +68,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   if (
     !video ||
-    (!video?.isPublished &&
-      !(video?.owner.toString() === req.user?._id.toString()))
-  ) {
+    !video?.isPublished) {
     throw new ApiError(404, "Video not found");
   }
   console.log(video);
@@ -104,10 +102,11 @@ const updateVideo = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  if (!video) {
-    throw new ApiError(400, "video is not update ");
+  if (
+    !video ||
+    !video?.isPublished ) {
+    throw new ApiError(404, "Video not found");
   }
-
   return res
     .status(200)
     .json(new ApiResponse(200, video, "the update had done "));

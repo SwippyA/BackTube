@@ -10,11 +10,11 @@ const isUserOwnerofPlaylist = async (playlistId, userId) => {
   try {
     const playlist = await Playlist.findById(playlistId);
 
-    console.log(playlist);
+    // console.log(playlist);
     if (!playlist) {
       throw new ApiError(400, "playlist doesn't exist");
     }
-    console.log(playlist.owner);
+    // console.log(playlist.owner);
     if (playlist?.owner.toString() !== userId?.toString()) {
       return false;
     }
