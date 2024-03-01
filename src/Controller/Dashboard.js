@@ -8,11 +8,21 @@ import { ApiResponse } from "../utility/ApiRespone.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
     // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
+
 })
 
 const getChannelVideos = asyncHandler(async (req, res) => {
     // TODO: Get all the videos uploaded by the channel
-})
+    const userId =req?.user?._id
+
+    const videos = await Video.find({owner:userId})
+    if(videos==0 || !videos){
+         
+     return res.status(201).json(new ApiResponse(200,videos,"the channel dont have any video"))
+
+    }
+    return res.status(201).json(new ApiResponse(200,videos,"Fetch successfully "))
+ })
 
 export {
     getChannelStats, 

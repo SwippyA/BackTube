@@ -13,14 +13,41 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
     // TODO: add a comment to a video
-})
+    const videoID= req.params;
+    const {content} =req.body;
+    if(!videoID){
+        throw new ApiError(400,"the videoID id required")
+    }
+    if(!content){
+        throw new ApiError(400,"the content  id required")
+    }
+    const comment =await Comment.create({
+       content:content,
+       video:videoID,
+       owner:req?.user?._id 
+    })
+    if(!comment){
+        throw new ApiError(400,"the comment is not created")
+    }
+    return res.status(202).json(new ApiResponse(200,comment,"The Comment is done "))
 
-const updateComment = asyncHandler(async (req, res) => {
-    // TODO: update a comment
-})
+ })
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
+    const commentID =req.params;
+    if(!commentID){
+        throw new ApiError(200,"the ID is necessary");
+
+    }
+    const comment=await  Comment.findById(commentID);
+    if(!comment){
+        throw new ApiError(402,"the comment is not find ")
+    }
+    if(comment.owner.tostring() !== req?.user._id.tostring()){
+        throw new ApiError(402,"You can't delect the comment ")
+    }
+    return res.status(201).json(new ApiResponse(200,[],"delected sucessfully "))
 })
 
 export {
