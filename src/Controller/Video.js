@@ -66,9 +66,7 @@ const getVideoById = asyncHandler(async (req, res) => {
   }
   const video = await Video.findById(videoId);
 
-  if (
-    !video ||
-    !video?.isPublished) {
+  if (!video || !video?.isPublished) {
     throw new ApiError(404, "Video not found");
   }
   console.log(video);
@@ -102,9 +100,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  if (
-    !video ||
-    !video?.isPublished ) {
+  if (!video || !video?.isPublished) {
     throw new ApiError(404, "Video not found");
   }
   return res
