@@ -35,9 +35,10 @@ app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/playlist", Playlist);
 app.use("/api/v1/Subscription", subscription);
 app.use("/api/v1/tweets", Tweet);
+
 app.use("/api/v1/dashboard", Dashboard);
-app.use("/api/v1/tweets", Likes);
-app.use("/api/v1/tweets", Comments);
-app.use("/api/v1/tweets", healthcheck);
+app.use("/api/v1/Likes", Likes);
+app.use("/api/v1/Comments", Comments);
+app.use("/api/v1/Healthcheck", healthcheck);
 
 export { app };
