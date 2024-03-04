@@ -12,9 +12,9 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
   // TODO: add a comment to a video
-  const videoID = req.params;
+  const { videoId } = req.params;
   const { content } = req.body;
-  if (!videoID) {
+  if (!videoId) {
     throw new ApiError(400, "the videoID id required");
   }
   if (!content) {
@@ -22,7 +22,7 @@ const addComment = asyncHandler(async (req, res) => {
   }
   const comment = await Comment.create({
     content: content,
-    video: videoID,
+    video: videoId,
     owner: req?.user?._id,
   });
   if (!comment) {
@@ -35,20 +35,21 @@ const addComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
-  const commentID = req.params;
-  if (!commentID) {
+  const { commentId } = req.params;
+  if (!commentId) {
     throw new ApiError(200, "the ID is necessary");
   }
-  const comment = await Comment.findById(commentID);
+  const comment = await Comment.findById(commentId);
   if (!comment) {
     throw new ApiError(402, "the comment is not find ");
   }
-  if (comment.owner.tostring() !== req?.user._id.tostring()) {
-    throw new ApiError(402, "You can't delect the comment ");
+  if (comment.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(300, "Unauthorized Access");
   }
+  const delected_comment = await Comment.deleteOne(comment);
   return res
     .status(201)
-    .json(new ApiResponse(200, [], "delected sucessfully "));
+    .json(new ApiResponse(200, delected_comment, "delected sucessfully "));
 });
 
 export { getVideoComments, addComment, deleteComment };
