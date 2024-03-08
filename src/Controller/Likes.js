@@ -60,17 +60,15 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(new ApiResponse(200, new_like, "the liked done "));
-  }
-  else{
+  } else {
     const delected_like = await Like.deleteOne(like_patten);
-  if (!delected_like) {
-    throw new ApiError(400, "the like not toggle");
+    if (!delected_like) {
+      throw new ApiError(400, "the like not toggle");
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, delected_like, "disliked "));
   }
-  return res
-  .status(200)
-  .json(new ApiResponse(200, delected_like, "disliked "));
-  }
-  
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
@@ -106,6 +104,39 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 
 const getLikedVideos = asyncHandler(async (req, res) => {
   //TODO: get all liked videos
+  const userId = req?.user?._id;
+  if (!userId) {
+    throw new ApiError(400, "the id is not there ");
+  }
+  const liked_video = await Like.aggregate([
+    {
+      $match: {
+        likedBy: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup:{
+      from: "videos",
+       localField: "video",
+       foreignField: "_id",
+       as:'video_detail'
+      }
+    },
+    {
+      $project:{
+        likedBy:0,
+        createdAt:0,
+        updatedAt:0,
+        __v:0
+      }
+    }
+  ]);
+  if (!liked_video) {
+    throw new ApiError(200, "cant found out ");
+  }
+  return res
+    .status(202)
+    .json(new ApiResponse(200, liked_video, "the fetch complete "));
 });
 
 export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
