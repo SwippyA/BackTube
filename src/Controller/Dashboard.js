@@ -8,6 +8,7 @@ import { ApiResponse } from "../utility/ApiRespone.js";
 
 const getChannelStats = asyncHandler(async (req, res) => {
   // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
+  const userId = req.user?._id;
 });
 
 const getChannelVideos = asyncHandler(async (req, res) => {

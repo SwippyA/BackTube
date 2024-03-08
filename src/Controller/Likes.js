@@ -115,21 +115,21 @@ const getLikedVideos = asyncHandler(async (req, res) => {
       },
     },
     {
-      $lookup:{
-      from: "videos",
-       localField: "video",
-       foreignField: "_id",
-       as:'video_detail'
-      }
+      $lookup: {
+        from: "videos",
+        localField: "video",
+        foreignField: "_id",
+        as: "video_detail",
+      },
     },
     {
-      $project:{
-        likedBy:0,
-        createdAt:0,
-        updatedAt:0,
-        __v:0
-      }
-    }
+      $project: {
+        likedBy: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        __v: 0,
+      },
+    },
   ]);
   if (!liked_video) {
     throw new ApiError(200, "cant found out ");
