@@ -40,7 +40,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   if (!subscriberId) {
     throw new ApiError(400, "the id is needed");
   }
-  const subscrber  = await subscribe.aggregate([
+  const subscrber = await subscribe.aggregate([
     {
       $match: {
         channel: new mongoose.Types.ObjectId(subscriberId),
@@ -53,19 +53,20 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
       },
     },
     {
-      $count:"subscribers"
+      $count: "subscribers",
     },
     {
       $project: {
         _id: 0,
-        
       },
     },
   ]);
-  if(!subscrber){
-    throw new ApiError(400,"the subscriber is not found ")
+  if (!subscrber) {
+    throw new ApiError(400, "the subscriber is not found ");
   }
-  return res.status(200).json(new ApiResponse(200,subscrber,"get my subscriber "))
+  return res
+    .status(200)
+    .json(new ApiResponse(200, subscrber, "get my subscriber "));
 });
 
 // controller to return channel list to which user has subscribed

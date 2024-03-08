@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from "mongoose";
+import mongoose, { Mongoose, isValidObjectId } from "mongoose";
 import { Playlist } from "../Models/Playlist.js";
 import { ApiError } from "../utility/Apierroe.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
@@ -50,6 +50,33 @@ const createPlaylist = asyncHandler(async (req, res) => {
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   //TODO: get user playlists
+  if (!userId) {
+    throw new ApiError(400, "the id is needed ");
+  }
+  const playlist = await Playlist.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        owner: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        videos: 1,
+      },
+    },
+  ]);
+  if (!playlist) {
+    throw new ApiError(400, "the playlist is not found  ");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "the fetch is complete "));
 });
 
 const getPlaylistById = asyncHandler(async (req, res) => {
@@ -93,6 +120,11 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   if (!platlist) {
     throw new ApiError(490, "playlist is not found");
   }
+  if (platlist.videos.includes(videoId)) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Video Is  already present In Playlist"));
+  }
   platlist.videos = platlist.videos.push(videoId);
   platlist.save({ validateBeforeSave: false });
 
@@ -121,23 +153,19 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     if (!playlist.videos.includes(videoId)) {
       throw new ApiError(404, "No Video Found in Playlist");
     }
-    
-    
-      const removedVideoFromPlaylist = await Playlist.updateOne(
-        {
-          _id: new mongoose.Types.ObjectId(playlistId),
-        },
-        {
-          $pull: { videos: videoId },
-        }
-      );
-      if (!removedVideoFromPlaylist) {
-        throw new ApiError(500, "Unable to remove ,Retry!!!!!");
+
+    const removedVideoFromPlaylist = await Playlist.updateOne(
+      {
+        _id: new mongoose.Types.ObjectId(playlistId),
+      },
+      {
+        $pull: { videos: videoId },
       }
-      return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "video removed "));
-    
+    );
+    if (!removedVideoFromPlaylist) {
+      throw new ApiError(500, "Unable to remove ,Retry!!!!!");
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "video removed "));
   } catch (error) {
     throw new ApiError(
       500,
