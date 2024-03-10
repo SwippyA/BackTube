@@ -17,9 +17,28 @@ const isUserOwner = async (videoId, req) => {
 };
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { page = 1, limit = 10, query, sortBy, sortType } = req.query;
   //TODO: get all videos based on query, sort, pagination
-  
+  const userId = req.user._id;
+
+  if (!userId) {
+    throw new ApiError(200, "the userId is needed");
+  }
+  const allVideo = await Video.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $project: {
+        isPublished: 0,
+      },
+    },
+  ]);
+  return res
+    .status(202)
+    .json(new ApiResponse(200, allVideo, "the fetch is complete"));
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {

@@ -67,6 +67,18 @@ const getVideoComments = asyncHandler(async (req, res) => {
   if (!comments_aggg) {
     throw new ApiError(400, "the video is not found");
   }
+
+  // const options = {
+  //   page: parseInt(page, 10),
+  //   limit: parseInt(limit, 10),
+  // };
+  // const comments = await Comment.aggregatePaginate(comments_aggg, options);
+
+  if (!comments_aggg && comments_aggg === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "the fetch was successful"));
+  }
   // console.log(comments);
   return res
     .status(200)

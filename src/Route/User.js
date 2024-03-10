@@ -32,7 +32,7 @@ router.route("/register").post(
 );
 router.route("/login").post(LoginUser);
 router.route("/logout").post(verifyJWT, Logout);
-router.route("/refreshtoken").post( RefreshToken );
+router.route("/refreshtoken").post(RefreshToken);
 
 router.route("/change-password").post(verifyJWT, changePassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
