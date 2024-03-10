@@ -7,8 +7,70 @@ import { ApiResponse } from "../utility/ApiRespone.js";
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
   const { videoId } = req.params;
+  if (!videoId) {
+    throw new ApiError(200, "the videoId is required");
+  }
   const { page = 1, limit = 10 } = req.query;
-  
+  const comments_aggg = await Comment.aggregate([
+    {
+      $match: {
+        video: new mongoose.Types.ObjectId(videoId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "comment",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes",
+        },
+        owner: {
+          $first: "$owner",
+        },
+        isLiked: {
+          $cond: {
+            if: { $in: [req.user?._id, "$likes.likedBy"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        content: 1,
+        createdAt: 1,
+        likesCount: 1,
+        owner: {
+          username: 1,
+          fullName: 1,
+          avatar: 1,
+        },
+        isLiked: 1,
+      },
+    },
+  ]);
+  if (!comments_aggg) {
+    throw new ApiError(400, "the video is not found");
+  }
+  // console.log(comments);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comments_aggg, "the fetch was successful"));
 });
 
 const addComment = asyncHandler(async (req, res) => {
