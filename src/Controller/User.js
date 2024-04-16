@@ -122,7 +122,7 @@ const LoginUser = asyncHandler(async (req, res) => {
 
   const is_valid = await login_user.isPasswordCorrect(password);
   if (!is_valid) {
-    throw new ApiError(401, "Worng Password !");
+    throw new ApiError(402, "Worng Password !");
   }
   // console.log(login_user._id);
   //  const { accessToken , refreshToken } = generate_refresh_and_access_token(login_user._id);
@@ -160,6 +160,42 @@ const LoginUser = asyncHandler(async (req, res) => {
         "User logged In Successfully"
       )
     );
+});
+
+const Verify_email = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(400, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user.id, "Verify the user and email"));
+});
+
+const ForgotPassword = asyncHandler(async (req, res) => {
+  const { newPassword } = req.body;
+  const {id} = req.params;
+  if (!newPassword) {
+    throw new ApiError(400, "New Password is required");
+  }
+  if (!id) {
+
+    throw new ApiError(400, "Id is required");
+  }
+  console.log(id);
+  const user = await User.findById(id);
+  if(!user) {
+    throw new ApiError(400, "User not found");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Set successfully"));
 });
 
 const Logout = asyncHandler(async (req, res) => {
@@ -460,6 +496,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 export {
   registerUser,
   LoginUser,
+  Verify_email,
+  ForgotPassword,
   Logout,
   RefreshToken,
   changePassword,

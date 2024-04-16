@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   registerUser,
   LoginUser,
+  Verify_email,
+  ForgotPassword,
   Logout,
   RefreshToken,
   changePassword,
@@ -11,6 +13,7 @@ import {
   getCurrentUser,
   userProfile,
   getWatchHistory,
+  
 } from "../Controller/User.js";
 import { upload } from "../Middleway/Multer.js";
 import { verifyJWT } from "../Middleway/Verify.js";
@@ -30,7 +33,13 @@ router.route("/register").post(
   ]),
   registerUser
 );
+// router.route("/register").post(
+//   upload.single("avatar"),
+//   registerUser
+// );
 router.route("/login").post(LoginUser);
+router.route("/email").get(Verify_email);
+router.route("/Forget_password/:id").post(ForgotPassword);
 router.route("/logout").post(verifyJWT, Logout);
 router.route("/refreshtoken").post(RefreshToken);
 
