@@ -164,12 +164,13 @@ const LoginUser = asyncHandler(async (req, res) => {
 
 const Verify_email = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
+  console.log(email);
   if (!email) {
-    throw new ApiError(400, "Email is required");
+    throw new ApiError(401, "Email is required");
   }
   const user = await User.findOne({ email });
   if (!user) {
-    throw new ApiError(400, "User not found");
+    throw new ApiError(402, "User not found");
   }
   return res
     .status(200)
