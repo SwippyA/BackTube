@@ -40,6 +40,47 @@ const getAllVideos = asyncHandler(async (req, res) => {
     .status(202)
     .json(new ApiResponse(200, allVideo, "the fetch is complete"));
 });
+const getAllVideos_of_site = asyncHandler(async (req, res) => {
+  const allVideo = await Video.aggregate([
+    {
+      $match: {
+        isPublished: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: "$owner" // Since $lookup returns an array, unwind it to get a single document
+    },
+    {
+      $project: {
+        _id: 1, // Include video _id
+        videoFile: 1, // Include videoFile
+        thumbnail: 1, // Include thumbnail
+        title: 1, // Include title
+        description: 1, // Include description
+        duration: 1, // Include duration
+        views: 1, // Include views
+        isPublished: 1, // Include isPublished
+        "owner._id": 1, // Include owner _id
+        "owner.username": 1, // Include owner username
+        "owner.avatar": 1, // Include owner avatar
+        createdAt: 1, // Include createdAt
+      },
+    },
+  ]);
+
+  return res
+    .status(202)
+    .json(new ApiResponse(200, allVideo, "the fetch is complete"));
+});
+
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -177,4 +218,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  getAllVideos_of_site,
 };

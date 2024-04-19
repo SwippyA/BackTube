@@ -13,10 +13,10 @@ import {
   getCurrentUser,
   userProfile,
   getWatchHistory,
-  
 } from "../Controller/User.js";
 import { upload } from "../Middleway/Multer.js";
 import { verifyJWT } from "../Middleway/Verify.js";
+import { getAllVideos_of_site } from "../Controller/Video.js";
 
 const router = Router();
 
@@ -37,6 +37,7 @@ router.route("/register").post(
 //   upload.single("avatar"),
 //   registerUser
 // );
+router.route("/all_Videos").get(getAllVideos_of_site);
 router.route("/login").post(LoginUser);
 router.route("/email").post(Verify_email);
 router.route("/Forget_password/:id").post(ForgotPassword);
@@ -52,6 +53,7 @@ router
   .post(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
   .route("/cover-image")
+
   .post(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
 router.route("/c/:username").get(verifyJWT, userProfile);
