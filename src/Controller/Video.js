@@ -5,6 +5,7 @@ import { ApiError } from "../utility/Apierroe.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
 import { asyncHandler } from "../utility/AsyHandler.js";
 import { uploadOnCloudinary } from "../utility/Fileupload.js";
+import { subscribe } from "../Models/Subscribing.js";
 
 const isUserOwner = async (videoId, req) => {
   const video = await Video.findById(videoId);
@@ -56,7 +57,7 @@ const getAllVideos_of_site = asyncHandler(async (req, res) => {
       },
     },
     {
-      $unwind: "$owner" // Since $lookup returns an array, unwind it to get a single document
+      $unwind: "$owner", // Since $lookup returns an array, unwind it to get a single document
     },
     {
       $project: {
@@ -80,7 +81,6 @@ const getAllVideos_of_site = asyncHandler(async (req, res) => {
     .status(202)
     .json(new ApiResponse(200, allVideo, "the fetch is complete"));
 });
-
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -123,17 +123,31 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   if (!videoId) {
-    throw new ApiError(400, "the id is not valid");
+    throw new ApiError(400, "The id is not valid");
   }
-  const video = await Video.findById(videoId);
+  // const
+  const video = await Video.findById(videoId).populate({
+    path: "owner",
+    select: "username avatar", // Select only the username and avatar fields of the owner
+    model: "User", // Specify the User model
+  });
 
-  if (!video || !video?.isPublished) {
+  if (!video || !video.isPublished) {
     throw new ApiError(404, "Video not found");
   }
+  // Count the number of subscribers for the owner
+  const subscriberCount = await subscribe.countDocuments({
+    channel: video.owner._id,
+  });
+  console.log(subscriberCount);
+  // Add the subscriber count to the video object
+  video.__v = subscriberCount || 0;
+  video.views = video.views + 1;
+  video.save({ validateBeforeSave: false });
   console.log(video);
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "fetch Sucessfully "));
+    .json(new ApiResponse(200, video, "Fetch successfully "));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {

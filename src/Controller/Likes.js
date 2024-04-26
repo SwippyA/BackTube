@@ -28,7 +28,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
     return res
       .status(200)
-      .json(new ApiResponse(200, delected_like, "disliked "));
+      .json(new ApiResponse(200, delected_like, "Disliked "));
   }
 
   const new_like = await Like.create(like_patten);
@@ -38,7 +38,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, new_like, "the liked done "));
+    .json(new ApiResponse(200, new_like, "Liked"));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {

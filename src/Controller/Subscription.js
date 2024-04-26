@@ -24,13 +24,13 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     }
     return res
       .status(202)
-      .json(new ApiResponse(200, unsubscribed, "unsubscribed dome "));
+      .json(new ApiResponse(200, unsubscribed, "unsubscribed"));
   } else {
     const subscribed = await subscribe.create(patten);
     if (!subscribed) {
       throw new ApiError(400, "subcribed is not done ");
     }
-    return res.status(201).json(new ApiResponse(200, subscribed, "done "));
+    return res.status(201).json(new ApiResponse(200, subscribed, "Subscribed"));
   }
 });
 

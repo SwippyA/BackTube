@@ -61,7 +61,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          channelStat[0],
+          channelStat[0] || [],
           "Channel Stat fetched Successfully"
         )
       );
