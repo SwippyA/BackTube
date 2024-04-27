@@ -67,7 +67,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     }
     return res
       .status(200)
-      .json(new ApiResponse(200, delected_like, "disliked "));
+      .json(new ApiResponse(200, delected_like, "remove the liked"));
   }
 });
 

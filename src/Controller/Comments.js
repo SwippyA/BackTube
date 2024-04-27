@@ -3,7 +3,7 @@ import { Comment } from "../Models/Comments.js";
 import { ApiError } from "../utility/Apierroe.js";
 import { asyncHandler } from "../utility/AsyHandler.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
-  
+
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
   const { videoId } = req.params;
@@ -93,7 +93,7 @@ const addComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "the videoID id required");
   }
   if (!content) {
-    throw new ApiError(400, "the content  id required");
+    throw new ApiError(400, "the content  required");
   }
   const comment = await Comment.create({
     content: content,
