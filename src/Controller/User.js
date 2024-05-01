@@ -120,9 +120,10 @@ const LoginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "You dont have Accout init!");
   }
 
+
   const is_valid = await login_user.isPasswordCorrect(password);
   if (!is_valid) {
-    throw new ApiError(402, "Worng Password !");
+    throw new ApiError(402, "Wronge Password !");
   }
   // console.log(login_user._id);
   //  const { accessToken , refreshToken } = generate_refresh_and_access_token(login_user._id);
