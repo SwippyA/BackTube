@@ -32,8 +32,30 @@ const getAllVideos = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: "$owner", // Since $lookup returns an array, unwind it to get a single document
+    },
+    {
       $project: {
-        isPublished: 0,
+        _id: 1, // Include video _id
+        videoFile: 1, // Include videoFile
+        thumbnail: 1, // Include thumbnail
+        title: 1, // Include title
+        description: 1, // Include description
+        duration: 1, // Include duration
+        views: 1, // Include views
+        isPublished: 1, // Include isPublished
+        "owner._id": 1, // Include owner _id
+        "owner.username": 1, // Include owner username
+        "owner.avatar": 1, // Include owner avatar
+        createdAt: 1, // Include createdAt
       },
     },
   ]);
