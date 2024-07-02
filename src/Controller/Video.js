@@ -16,7 +16,22 @@ const isUserOwner = async (videoId, req) => {
 
   return true;
 };
+const addVideoToWatchHistory = async (userId, video) => {
+  try {
+    // const id ="66842dd792a1d4fd7c2c583f"
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(400, "user not found");
+    }
+    console.log(video)
+    user.watchHistory.push(video);
+    await user.save();
 
+    console.log("Video added to watch history successfully");
+  } catch (error) {
+    console.error("Error adding video to watch history:", error.message);
+  }
+};
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType } = req.query;
   //TODO: get all videos based on query, sort, pagination
@@ -144,33 +159,35 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const userId = req.user._id;
+  
   if (!videoId) {
-    throw new ApiError(400, "The id is not valid");
+    throw new ApiError(400, "The ID is not valid");
   }
-  // const
+
   const video = await Video.findById(videoId).populate({
     path: "owner",
-    select: "username avatar", // Select only the username and avatar fields of the owner
-    model: "User", // Specify the User model
+    select: "username avatar",
+    model: "User",
   });
 
   if (!video || !video.isPublished) {
     throw new ApiError(404, "Video not found");
   }
-  // Count the number of subscribers for the owner
+
+  await addVideoToWatchHistory(userId, video);
+
   const subscriberCount = await subscribe.countDocuments({
     channel: video.owner._id,
   });
-  console.log(subscriberCount);
-  // Add the subscriber count to the video object
+
   video.__v = subscriberCount || 0;
-  video.views = video.views + 1;
-  video.save({ validateBeforeSave: false });
-  console.log(video);
-  return res
-    .status(200)
-    .json(new ApiResponse(200, video, "Fetch successfully "));
+  video.views += 1;
+  await video.save({ validateBeforeSave: false });
+
+  return res.status(200).json(new ApiResponse(200, video, "Fetch successful"));
 });
+
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
