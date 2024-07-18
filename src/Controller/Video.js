@@ -23,7 +23,7 @@ const addVideoToWatchHistory = async (userId, video) => {
     if (!user) {
       throw new ApiError(400, "user not found");
     }
-    console.log(video)
+    console.log(video);
     user.watchHistory.push(video);
     await user.save();
 
@@ -160,7 +160,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const userId = req.user._id;
-  
+
   if (!videoId) {
     throw new ApiError(400, "The ID is not valid");
   }
@@ -187,7 +187,6 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, video, "Fetch successful"));
 });
-
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;

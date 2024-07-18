@@ -72,6 +72,71 @@ const getChannelStats = asyncHandler(async (req, res) => {
     );
   }
 });
+const getChannelStatsById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const channelStat = await Video.aggregate([
+      {
+        $match: {
+          owner: new mongoose.Types.ObjectId(id),
+        },
+      },
+      {
+        $lookup: {
+          from: "likes",
+          localField: "_id",
+          foreignField: "video",
+          as: "Likes",
+        },
+      },
+      {
+        $lookup: {
+          from: "subscribes",
+          localField: "owner",
+          foreignField: "channel",
+          as: "Subscribers",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          TotalVideos: { $sum: 1 },
+          TotalViews: { $sum: "$views" },
+          TotalSubscribers: { $first: { $size: "$Subscribers" } },
+          TotalLikes: { $first: { $size: "$Likes" } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          TotalSubscribers: 1,
+          TotalLikes: 1,
+          TotalVideos: 1,
+          TotalViews: 1,
+        },
+      },
+    ]);
+
+    if (!channelStat) {
+      throw new ApiError(500, "Unable to fetch the channel stat!");
+    }
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          channelStat[0] || [],
+          "Channel Stat fetched Successfully"
+        )
+      );
+  } catch (e) {
+    throw new ApiError(
+      500,
+      e?.message || "Unable to fetch the channelm stat!!"
+    );
+  }
+});
 
 const getChannelVideos = asyncHandler(async (req, res) => {
   // TODO: Get all the videos uploaded by the channel
@@ -87,5 +152,24 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, videos, "Fetch successfully "));
 });
+const getChannelVideosByID = asyncHandler(async (req, res) => {
+  // TODO: Get all the videos uploaded by the channel
+  const { id } = req.params;
 
-export { getChannelStats, getChannelVideos };
+  const videos = await Video.find({ owner: id });
+  if (videos == 0 || !videos) {
+    return res
+      .status(201)
+      .json(new ApiResponse(200, videos, "the channel dont have any video"));
+  }
+  return res
+    .status(201)
+    .json(new ApiResponse(200, videos, "Fetch successfully "));
+});
+
+export {
+  getChannelStats,
+  getChannelVideos,
+  getChannelVideosByID,
+  getChannelStatsById,
+};

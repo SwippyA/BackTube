@@ -120,7 +120,6 @@ const LoginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "You dont have Accout init!");
   }
 
-
   const is_valid = await login_user.isPasswordCorrect(password);
   if (!is_valid) {
     throw new ApiError(402, "Wronge Password !");
@@ -180,24 +179,27 @@ const Verify_email = asyncHandler(async (req, res, next) => {
 
 const ForgotPassword = asyncHandler(async (req, res) => {
   const { newPassword } = req.body;
-  const {id} = req.params;
+  const { id } = req.params;
+
   if (!newPassword) {
-    throw new ApiError(400, "New Password is required");
+    throw new ApiError(401, "New Password is required");
   }
   if (!id) {
+    throw new ApiError(402, "Id is required");
+  }
 
-    throw new ApiError(400, "Id is required");
+  const updatedUser = await User.findById(id);
+
+  updatedUser.password = newPassword;
+  await updatedUser.save({ validateBeforeSave: false });
+
+  if (!updatedUser) {
+    throw new ApiError(403, "User not found");
   }
-  console.log(id);
-  const user = await User.findById(id);
-  if(!user) {
-    throw new ApiError(400, "User not found");
-  }
-  user.password = newPassword;
-  await user.save({ validateBeforeSave: false });
+
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Password Set successfully"));
+    .json(new ApiResponse(200, {}, "Password set successfully"));
 });
 
 const Logout = asyncHandler(async (req, res) => {
@@ -493,6 +495,18 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select(
+    "-password -refreshToken"
+  );
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
+});
 // console.log(generate_refresh_and_access_token)
 
 export {
@@ -509,4 +523,5 @@ export {
   getCurrentUser,
   userProfile,
   getWatchHistory,
+  getUserById,
 };

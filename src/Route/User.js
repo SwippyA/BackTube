@@ -7,6 +7,7 @@ import {
   Logout,
   RefreshToken,
   changePassword,
+  getUserById,
   updateUserCoverImage,
   updateUserAvatar,
   updateAccountDetails,
@@ -58,5 +59,6 @@ router
 
 router.route("/c/:username").get(verifyJWT, userProfile);
 router.route("/history").get(verifyJWT, getWatchHistory);
+router.route("/userGetById/:id").get(verifyJWT, getUserById);
 
 export default router;
