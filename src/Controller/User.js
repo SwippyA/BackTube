@@ -295,7 +295,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email } = req.body;
 
   if (!fullName || !email) {
-    throw new ApiError(400, "All fields are required");
+    throw new ApiError(401, "All fields are required");
   }
 
   const user = await User.findByIdAndUpdate(
@@ -308,6 +308,11 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     },
     { new: true }
   ).select("-password");
+  console.log(user)
+
+  if(!user){
+    throw new ApiError(401, "User not found");
+  }
 
   return res
     .status(200)
