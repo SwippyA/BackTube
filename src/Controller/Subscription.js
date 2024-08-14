@@ -72,33 +72,76 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   if (!channelId) {
-    throw new ApiError(400, "the id is needed");
+    throw new ApiError(400, "The id is needed");
   }
-  const channel_subcribed = await subscribe.aggregate([
+
+  const channel_subscribed = await subscribe.aggregate([
     {
       $match: {
         subscriber: new mongoose.Types.ObjectId(channelId),
       },
     },
     {
+      $lookup: {
+        from: "users", // Assuming the users collection is named 'users'
+        localField: "channel",
+        foreignField: "_id",
+        as: "channelDetails",
+      },
+    },
+    {
+      $unwind: "$channelDetails",
+    },
+    {
+      $lookup: {
+        from: "videos", // Assuming the videos collection is named 'videos'
+        let: { ownerId: "$channelDetails._id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$owner", "$$ownerId"] } } },
+          { $sort: { createdAt: -1 } }, // Sort by the most recent video
+          { $limit: 1 }, // Only get the most recent video
+        ],
+        as: "lastVideo",
+      },
+    },
+    {
+      $unwind: {
+        path: "$lastVideo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $group: {
-        _id: "subscriber",
-        channel: { $push: "$channel" },
+        _id: "$channelDetails._id",
+        username: { $first: "$channelDetails.username" },
+        avatar: { $first: "$channelDetails.avatar" },
+        lastVideo: { $first: "$lastVideo" }, // Get the last uploaded video
       },
     },
     {
       $project: {
         _id: 0,
-        channel: 1,
+        channelId: "$_id",
+        username: 1,
+        avatar: 1,
+        lastVideo: {
+          _id:"$lastVideo._id",
+          title: "$lastVideo.title",
+          uploadDate: "$lastVideo.createdAt",
+          views: "$lastVideo.views",
+          videoUrl: "$lastVideo.videoFile",
+          thumbnail: "$lastVideo.thumbnail",
+        },
       },
     },
   ]);
-  if (!channel_subcribed) {
-    throw new ApiError(400, "the channel not found ");
+
+  if (!channel_subscribed.length) {
+    throw new ApiError(400, "No subscribed channels found");
   }
   return res
     .status(200)
-    .json(new ApiResponse(201, channel_subcribed, "the fetch sucessed"));
+    .json(new ApiResponse(201, channel_subscribed, "Fetch successful"));
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
