@@ -1,5 +1,6 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../Models/Video.js";
+import { Like } from "../Models/Likes.js";
 import { User } from "../Models/User.js";
 import { ApiError } from "../utility/Apierroe.js";
 import { ApiResponse } from "../utility/ApiRespone.js";
@@ -181,12 +182,39 @@ const getVideoById = asyncHandler(async (req, res) => {
     channel: video.owner._id,
   });
 
+  // Check if the user is subscribed to the video's owner
+  const isSubscribed = await subscribe.exists({
+    subscriber: userId,
+    channel: video.owner._id,
+  });
+
+  // Check if the user has liked the video
+  const isLiked = await Like.exists({
+    video: videoId,
+    likedBy: userId,
+  });
+
   video.__v = subscriberCount || 0;
   video.views += 1;
   await video.save({ validateBeforeSave: false });
 
-  return res.status(200).json(new ApiResponse(200, video, "Fetch successful"));
+  // Modify the owner field to include the isSubscribed field
+  const ownerWithSubscription = {
+    ...video.owner.toObject(),
+    isSubscribed: !!isSubscribed, // Convert to boolean
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      video: {
+        ...video.toObject(),
+        owner: ownerWithSubscription, // Include the modified owner object
+        isLiked: !!isLiked, // Include the isLiked field
+      },
+    }, "Fetch successful")
+  );
 });
+
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -272,3 +300,47 @@ export {
   togglePublishStatus,
   getAllVideos_of_site,
 };
+
+
+
+// const getVideoById = asyncHandler(async (req, res) => {
+//   const { videoId } = req.params;
+//   const userId = req.user._id;
+
+//   if (!videoId) {
+//     throw new ApiError(400, "The ID is not valid");
+//   }
+
+//   const video = await Video.findById(videoId).populate({
+//     path: "owner",
+//     select: "username avatar",
+//     model: "User",
+//   });
+
+//   if (!video || !video.isPublished) {
+//     throw new ApiError(404, "Video not found");
+//   }
+
+//   await addVideoToWatchHistory(userId, video);
+
+//   const subscriberCount = await subscribe.countDocuments({
+//     channel: video.owner._id,
+//   });
+
+//   // Check if the user is subscribed to the video's owner
+//   const isSubscribed = await subscribe.exists({
+//     subscriber: userId,
+//     channel: video.owner._id,
+//   });
+
+//   video.__v = subscriberCount || 0;
+//   video.views += 1;
+//   await video.save({ validateBeforeSave: false });
+
+//   return res.status(200).json(
+//     new ApiResponse(200, {
+//       video,
+//       isSubscribed: !!isSubscribed, // Convert to boolean
+//     }, "Fetch successful")
+//   );
+// });
