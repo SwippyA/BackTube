@@ -17,22 +17,22 @@ const isUserOwner = async (videoId, req) => {
 
   return true;
 };
-const addVideoToWatchHistory = async (userId, video) => {
-  try {
-    // const id ="66842dd792a1d4fd7c2c583f"
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new ApiError(400, "user not found");
-    }
-    console.log(video);
-    user.watchHistory.push(video);
-    await user.save();
+// const addVideoToWatchHistory = async (userId, video) => {
+//   try {
+//     // const id ="66842dd792a1d4fd7c2c583f"
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       throw new ApiError(400, "user not found");
+//     }
+//     console.log(video);
+//     user.watchHistory.push(video);
+//     await user.save();
 
-    console.log("Video added to watch history successfully");
-  } catch (error) {
-    console.error("Error adding video to watch history:", error.message);
-  }
-};
+//     console.log("Video added to watch history successfully");
+//   } catch (error) {
+//     console.error("Error adding video to watch history:", error.message);
+//   }
+// };
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType } = req.query;
   //TODO: get all videos based on query, sort, pagination
@@ -176,7 +176,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not found");
   }
 
-  await addVideoToWatchHistory(userId, video);
+  // await addVideoToWatchHistory(userId, video);
 
   const subscriberCount = await subscribe.countDocuments({
     channel: video.owner._id,
@@ -205,16 +205,19 @@ const getVideoById = asyncHandler(async (req, res) => {
   };
 
   return res.status(200).json(
-    new ApiResponse(200, {
-      video: {
-        ...video.toObject(),
-        owner: ownerWithSubscription, // Include the modified owner object
-        isLiked: !!isLiked, // Include the isLiked field
+    new ApiResponse(
+      200,
+      {
+        video: {
+          ...video.toObject(),
+          owner: ownerWithSubscription, // Include the modified owner object
+          isLiked: !!isLiked, // Include the isLiked field
+        },
       },
-    }, "Fetch successful")
+      "Fetch successful"
+    )
   );
 });
-
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -229,6 +232,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   if (!thumbnail.url) {
     throw new ApiError(400, "the file not upload ");
   }
+
   const video = await Video.findByIdAndUpdate(
     videoId,
     {
@@ -300,8 +304,6 @@ export {
   togglePublishStatus,
   getAllVideos_of_site,
 };
-
-
 
 // const getVideoById = asyncHandler(async (req, res) => {
 //   const { videoId } = req.params;
